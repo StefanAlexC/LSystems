@@ -26,6 +26,9 @@ type Stack
 type ColouredLine
   = (Vertex, Vertex, Colour)
 
+eps = 0.0000000001
+degToRad = 57.2957795131
+
 --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
 --  Functions for working with systems.
 
@@ -54,10 +57,14 @@ expandOne givenRule []
    = []
 expandOne givenRule (x:xs) 
    = (lookupChar x givenRule) ++ (expandOne givenRule xs) 
+--Ask PPT about optimization
 
 -- |Expand a command `n' times using the given set of rules.
 expand :: Rules -> String -> Int -> String
-expand = error "TODO: implement expand"
+expand givenRule command 0
+   = command
+expand givenRule command n
+   = expand givenRule (expandOne givenRule command) (n-1)
 
 -- |Move a turtle.
 --
@@ -65,7 +72,26 @@ expand = error "TODO: implement expand"
 --  * 'L' rotates left according to the given angle.
 --  * 'R' rotates right according to the given angle.
 move :: Char -> TurtleState -> Float -> TurtleState
-move = error "TODO: implement move"
+move command ((x, y), angle) degree
+   | command == 'R' = ((x, y), (changeAngle angle (-degree)))
+   | command == 'L' = ((x, y), (changeAngle angle degree))
+   | otherwise      = move1 ((x, y), angle)
+
+changeAngle :: Float -> Float -> Float
+changeAngle currentAngle change
+   | newAngle >= maxAngle = newAngle - maxAngle
+   | newAngle <  minAngle = maxAngle + newAngle 
+   | otherwise            = newAngle
+   where
+      newAngle = currentAngle + change
+      maxAngle = 360
+      minAngle = 0
+
+move1 :: TurtleState -> TurtleState
+move1 ((x, y), angle)
+   = (((x + (cos newAngle)), (y + (sin newAngle))), angle)
+   where
+      newAngle = angle / degToRad
 
 -- |Trace lines drawn by a turtle using the given colour, following the
 --  commands in the string and assuming the given initial angle of rotation.
