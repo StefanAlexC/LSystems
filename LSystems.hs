@@ -27,7 +27,7 @@ type ColouredLine
   = (Vertex, Vertex, Colour)
 
 eps = 0.0000000001
-degToRad = 57.2957795131
+degToRad = pi/180
 
 --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
 --  Functions for working with systems.
@@ -91,7 +91,7 @@ move1 :: TurtleState -> TurtleState
 move1 ((x, y), angle)
    = (((x + (cos newAngle)), (y + (sin newAngle))), angle)
    where
-      newAngle = angle / degToRad
+      newAngle = angle * degToRad
 
 -- |Trace lines drawn by a turtle using the given colour, following the
 --  commands in the string and assuming the given initial angle of rotation.
@@ -103,7 +103,35 @@ trace1 = error "TODO: implement trace1"
 --  commands in the string and assuming the given initial angle of rotation.
 --  Method 2
 trace2 :: String -> Float -> Colour -> [ColouredLine]
-trace2 = error "TODO: implement trace2"
+trace2 commands angleChange colour
+   = trace2' (commands ++ "]") angleChange initialPosition colour "["
+   where
+      initialPosition = ((0, 0), 90)
+      trace2' :: String -> Float -> TurtleState -> Colour -> String -> [ColouredLine]
+      trace2' [] _ _ _ _
+         = [] 
+      trace2' (l:ls) angleChange ((x, y), angle) colour stack
+         | l == ']'  = (simpleCommands) ++ (trace2' ls angleChange ((x, y), angle) colour remainingStack)
+         | otherwise = trace2' ls angleChange ((x, y), angle) colour (l:stack)
+         where
+            (simpleCommands, remainingStack) = pop stack
+            pop :: String -> ([ColouredLine], String)
+            pop stack'
+               = ((simpleCase simpleCommands' angleChange ((x, y), angle) colour), remainingStack')
+               where
+                  (simpleCommands', remainingStack') = pop' stack' []
+                  pop' (h:hs) inv
+                     | h == '['  = (inv, hs)
+                     | otherwise = pop' hs (h:inv) 
+
+simpleCase :: String -> Float -> TurtleState -> Colour -> [ColouredLine]
+simpleCase [] _ _ _
+   = []
+simpleCase (l:ls) angleChange ((x,y), angle) colour
+   | l == 'F'  = ((x, y), (x', y'), colour) : (simpleCase ls angleChange pos colour)
+   | otherwise = simpleCase ls angleChange pos colour
+   where
+      pos@((x', y'), angle') = move l ((x, y), angle) angleChange
 
 
 --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
