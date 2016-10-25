@@ -32,6 +32,8 @@ degToRad = pi/180
 initialPosition :: TurtleState
 initialPosition = ((0, 0), 90)
 
+testString = "FF[RF[RF][LF][FF]][LF[RF][LF][FF]][FFF[RF][LF][FF]]"
+
 --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
 --  Functions for working with systems.
 
