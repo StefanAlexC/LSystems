@@ -29,8 +29,8 @@ type ColouredLine
 eps = 0.0000000001
 degToRad = pi/180
 
-initialPosition :: TurtleState
-initialPosition = ((0, 0), 90)
+initialState :: TurtleState
+initialState = ((0, 0), 90)
 
 testString = "FF[RF[RF][LF][FF]][LF[RF][LF][FF]][FFF[RF][LF][FF]]"
 
@@ -103,7 +103,7 @@ move1 ((x, y), angle)
 --  Method 1
 trace1 :: String -> Float -> Colour -> [ColouredLine]
 trace1 commands angleChange colour 
-   = trace1' commands angleChange initialPosition initialPosition colour
+   = trace1' commands angleChange initialState initialState colour
    where
       trace1' :: String -> Float -> TurtleState -> TurtleState -> Colour -> [ColouredLine]
       trace1' [] _ _ _ _ 
@@ -121,39 +121,18 @@ trace1 commands angleChange colour
 --  Method 2
 trace2 :: String -> Float -> Colour -> [ColouredLine]
 trace2 commands angleChange colour
-   = trace2' commands angleChange [] initialPosition colour 
+   = trace2' commands angleChange colour initialState [initialState]  
    where
-      trace2' [] angleChange stack turtleState colour
+      trace2' :: String -> Float -> Colour -> TurtleState -> [TurtleState] -> [ColouredLine]
+      trace2' [] _ _ _ _
          = []
-      trace2' (c:cs) angleChange stack turtleState colour
-         | isCommand c = trace2' cs angleChange (c : stack) turtleState colour
-         | c == '['    = simpleCommands ++ (trace2' cs angleChange [] newState colour)
-         | otherwise   = simpleCommands ++ (trace2' cs angleChange [] turtleState colour)
+      trace2' (c : cs) angleChange colour currentState@((x, y), angle) stack@(oldState : stack')
+         | c == '['  = trace2' cs angleChange colour currentState (currentState : stack)
+         | c == ']'  = trace2' cs angleChange colour oldState stack'
+         | c == 'F'  =  ((x, y), (x', y'), colour) : (trace2' cs angleChange colour newState stack)  
+         | otherwise = trace2' cs angleChange colour newState stack
          where
-            (simpleCommands, newState) = pop stack
-            pop :: String -> ([ColouredLine], TurtleState)
-            pop stack'
-               = simpleCase simpleCommands' angleChange turtleState colour
-               where
-                  simpleCommands' = pop' stack' []
-                  pop' [] inv
-                     = inv
-                  pop' (h:hs) inv
-                     = pop' hs (h:inv)
-
-
-simpleCase :: String -> Float -> TurtleState -> Colour -> ([ColouredLine], TurtleState)
-simpleCase [] _ lastState _
-   = ([], lastState)
-simpleCase (l:ls) angleChange ((x,y), angle) colour
-   | l == 'F'  = (((x, y), (x', y'), colour) : commandList, lastState)
-   | otherwise = simpleCase ls angleChange pos colour
-   where
-      pos@((x', y'), angle') = move l ((x, y), angle) angleChange
-      (commandList, lastState) = simpleCase ls angleChange pos colour
-
-isCommand :: Char -> Bool
-isCommand x = (x == 'F') || (x == 'R') || (x == 'L')
+            newState@((x', y'), angle') = move c currentState angleChange    
 
 --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
 
