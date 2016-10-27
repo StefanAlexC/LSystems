@@ -103,21 +103,25 @@ move1 ((x, y), angle)
 --  Method 1
 trace1 :: String -> Float -> Colour -> [ColouredLine]
 trace1 commands angleChange colour 
-   = trace1' commands angleChange initialState colour
+   = result
    where
+      (result, _) =  trace1' commands angleChange initialState colour
       trace1' :: String -> Float -> TurtleState -> Colour -> ([ColouredLine], String)
       trace1' [] _ _ _ 
          = ([], [])
+      trace1' ('[' : cs) angleChange currentState colour
+         = (recursionLines ++ followingLines, remainingCommands')
+         where
+            (recursionLines, remainingCommands) = trace1' cs angleChange currentState colour 
+            (followingLines, remainingCommands') = trace1' remainingCommands angleChange currentState colour
+      trace1' (']' : cs) angleChange currentState colour
+         = ([], cs)
       trace1' (c:cs) angleChange currentState@((x, y), angle) colour
-         | c == '['  = (processedLines ++ returnedLines, !!!)
-         | c == ']'  = ([], cs) 
-         | c == 'F'  = (((x, y), (x', y'), colour) : processedLines, remainingCommands)
-         | otherwise = (processedLines, remainingCommands) 
+         | c == 'F'  = (((x, y), (x', y'), colour) : returnedLines, remainingCommands)
+         | otherwise = (returnedLines, remainingCommands) 
          where
             newState@((x', y'), angle') = move c currentState angleChange
-            (returnedLines, remainingCommands) = trace1' cs angleChange currentState colour
-            (processedLines, ) = trace1' cs angleChange newState colour
-            (pendingLines, remainingCommands) = trace1' cs angleChange currentState colour
+            (returnedLines, remainingCommands) = trace1' cs angleChange newState colour
 
 -- |Trace lines drawn by a turtle using the given colour, following the
 --  commands in the string and assuming the given initial angle of rotation.
