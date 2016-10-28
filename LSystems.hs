@@ -33,6 +33,7 @@ initialState :: TurtleState
 initialState = ((0, 0), 90)
 
 testString = "FF[RF[RF][LF][FF]][LF[RF][LF][FF]][FFF[RF][LF][FF]]"
+tracetest = "FF[RF[LF]]"
 
 --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
 --  Functions for working with systems.
